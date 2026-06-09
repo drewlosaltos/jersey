@@ -1,0 +1,46 @@
+This project tries to address the creation of galleries of players.
+A gallery of a volleyball player is a set of images that represent a given player's appearance.
+We want this in order to be able to train re-identification networks.
+
+We have dataset in /mnt/t/data/vball/skyball that contains MOT annotations in addition to jersey-based identities.
+For each on of the videos in this dataset, which each represents a single play, 12 players exist, no more, no less.
+
+Oftentimes, there are multiple videos that correspond to a single match but different plays.
+What we actually want to do is have a unique gallery per player per match. This means that the gallery should likely
+be assembled by considering all the play videos associated with that match. Also, because of this, the number of
+players in the gallery may easily be greater than 12 because each play may contain different set of players.
+
+
+We have a few challenges that we want to address:
+
+1. Variety
+   We want to make sure that for any player, we see the player from different angles and poses as much as possible such
+   that the re-id network becomes robust to different view points. We even probably want the ability to identify the player
+   even when they're partially (but not fully) occluded.
+   
+2. The player we care about is sufficiently salient in the image
+   This is a challenging one. We could use a rule to insure this: that the IOU of the player we care about, that the max IOU of their box with other player
+   boxes is less than a threshold such as 40%. However this is likely too conservative of an approach, such as when there is IOU of 60% but the player we
+   care about is not occluded by anyone else, but instead they are the occluder.
+
+   So i'd like you to consider a few heuristics:
+     Given a player and one of their bboxes ...
+     
+     When IOU < thresh for any boxes (such as thresh == 40%), consider the player crop reasonable to sample.
+     When IOU >= thresh, it still may be OK to use a bbox as long as the other bboxes with IOU >= thresh are behind this player. We
+     should be able to determine that with a set of criteria:
+        * Far-side players are behind all near-side players
+	* On a given side, if two players aren't jumping, it should be reasonable to use their y2 location to determine who's in front of who.
+          In other words, a bbox with larger y2 should be in front of a bbox with smaller y2.
+	* It's trickier when players are jumping, but you could implement a heuristic that when a player is jumping their y2 could be linear interpolated
+	  between the frame before they start to jump and the frame after they land. That interpolated/jump-adjusted y2 could represent their location
+	  on the court.
+
+Target maybe 20 images/player/match.
+I would think that you'd first try to assemble possible candidates of bboxes for a given player.
+But after you have that set, you'd need to come up with a reasonable way to assemble a variety of images, and i'm not entirely sure of the right way.
+An obvious way is that if you could capture a variety of poses, that'd be good, but i think you could also try to just randomly pick.
+
+	
+     
+

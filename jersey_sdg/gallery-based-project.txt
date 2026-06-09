@@ -1,0 +1,22 @@
+
+We now have a dataset of galleries of images for each player for many matches.
+The data is being generated here: /mnt/t/data/vball/skyball/jersey/gallery/v0.
+For each match, for each team/player, there is a gallery of 15 images, such as /mnt/t/data/vball/skyball/jersey/gallery/v0/train/crops/000012_resplendent_viscacha/000012_resplendent_viscacha__A__jersey13, that represent that player.
+
+Now that we've built this dataset, i'd like to also use these same images to train a jersey recogniztion model.
+
+I like trying this approach: chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://openaccess.thecvf.com/content/CVPR2025W/CVSPORTS/papers/Grad_Single-Stage_Uncertainty-Aware_Jersey_Number_Recognition_in_Soccer_CVPRW_2025_paper.pdf. This would require us to have ground truth labels regarding visiblity of the jersey number.
+
+We do have the ground truth jersey number for these images encoded in the filename. But the visibility is something we have to create. We've spent some time experimenting with approaches described in jersey_sgd/project.txt, such as to use qwen 3.7 plus as a synthetic labeller to get this visibility information.
+
+I would think that we can start with this approach, although i'm very curious if perhaps LocateAnything: Fast and High-Quality Vision-Language Grounding with Parallel Box Decoding , https://huggingface.co/nvidia/LocateAnything-3B, would perform better.
+
+Can you take a few different matches and generate a grid view that shows the images + the visibility prediction clearly?
+
+Qwen 3.7 method
+Prompt with tell me whether the jersey number is reasonably visible and if so what it is. Respond with, for example: "visible, #10" or "not visible". Feel free to reason through the visiblity if that would help. If the response agrees with our GT jersey number, then we should consider this image as having visible jersey. Otherwise the label for that image should be 'not visible'.
+
+Locate Anything
+I haven't thought of the ideal way to prompt/use this model, i leave it up to you.
+
+

@@ -1,0 +1,76 @@
+This project's purpose is to create a dataset that can be used to train:
+1. A jersey recognition model capable of telling us what a given player image crop's jersey number is. This model needs to be capable of saying whether the jersey number is visible/legible and if so, what the number is.
+2. A re-identification network that given a gallery of know players/identities and a image crop of a player can tell us which player out of the gallery it is.
+
+We have dataset in /mnt/t/data/vball/skyball that is MOT-style in that for each video, there are player tracks (annotations embedded within the json for that video). And these annotations also include the jersey number of that player.  The challenge with leveraging this data is that the jersey number is often not clearly visible if we were to take an image crop of that player on a given frame using the gt bbox.
+
+Proposal:
+
+Use Qwen 3.7 Plus as a synthetic labeller.
+You could use a prompt such as this: "Can look at this player image and tell me what the jersey number is? if you're unsure or the digits are not visible, then say that"
+
+Ideally you can get this to run efficiently on our system, i don't know how well Qwen 3.7 plus would work. Perhaps one of the quantized variants would work.
+
+Sampling ...
+For each video of our dataset, its a volleyball play of maybe 10-20 seconds.
+The basename of the file encodes the match name and there should be a suffix in the filename like 'play1' or 'play2'.
+
+We want a few things:
+
+A. For re-id:
+  For each match, for each player, a gallery of images of that player. Ideally the primary player centered in the image is not entirely or nearly full occluded, else the re-id network would have a difficult time.
+
+B. For jersey identification:
+  Assemble a dataset of player crops along with visible/not visible and the jersey GT. In an ideal world, we have a healthy mixture of positive/negative examples such that the jersey detector learns well.
+
+
+Start by generating some trial runs ofr A and B. Then share them with me.
+If things look good, we'll want to scale it up.
+
+2026-06-05 08:35 - Implemented initial package/CLI/tests; using pt5090new env for crop tooling.
+2026-06-05 08:45 - Built trial_001: 760 reid crops, 1900 jersey crops, 95 identities.
+2026-06-05 08:53 - Installed SGLang in pt5090new; torch/torchvision now cu130; tests pass.
+2026-06-05 09:02 - Stopped full VLM job; built 32-example review grid across 4 videos.
+2026-06-05 09:04 - Copied trial_001 to /mnt/t/output/jersey_sgd; stopped SGLang server.
+2026-06-05 09:12 - Built trial_002 and 80-example review grid across 10 additional videos.
+2026-06-05 09:22 - Ran bbox prompt experiment on 5 occlusion/confounder examples; bbox context helped some cases.
+2026-06-05 09:31 - Added original-crop bbox overlay variant; matched larger-context behavior on 5-case test.
+2026-06-05 09:37 - Exported 5 challenging original crops plus intersecting bbox JSONs/overlays.
+
+2026-06-05 08:25 - trial crops built: 760 reid, 1900 jersey, 95 identities -> jersey_sdg/outputs/trial_001
+
+2026-06-05 08:44 - vlm labels: 0/8 ok, 0 matches -> jersey_sdg/outputs/trial_001/manifests/jersey_vlm_labels.jsonl
+
+2026-06-05 08:45 - vlm labels: 0/2 ok, 0 matches -> jersey_sdg/outputs/trial_001/manifests/jersey_vlm_labels.jsonl
+
+2026-06-05 08:46 - vlm labels: 2/2 ok, 0 matches -> jersey_sdg/outputs/trial_001/manifests/jersey_vlm_labels.jsonl
+
+2026-06-05 08:47 - vlm labels: 64/64 ok, 4 matches -> jersey_sdg/outputs/trial_001/manifests/jersey_vlm_labels.jsonl
+
+2026-06-05 08:57 - review grid: 32/32 labels -> jersey_sdg/outputs/trial_001/reports/review_32_grid.html
+
+2026-06-05 09:01 - trial crops built: 1272 reid, 3180 jersey, 159 identities -> /mnt/t/output/jersey_sgd/trial_002
+
+2026-06-05 09:05 - review grid: 80/80 labels -> /mnt/t/output/jersey_sgd/trial_002/reports/review_80_grid.html
+
+2026-06-07 09:08 - gallery review grid: 36/36 labels -> /mnt/t/output/jersey_sgd/gallery_review_v0/reports/gallery_review_grid.html
+
+2026-06-07 09:13 - gallery review grid: 60/60 labels -> /mnt/t/output/jersey_sgd/gallery_review_v0_100/reports/gallery_review_100_grid.html
+
+2026-06-07 09:15 - gallery review grid: 100/100 labels -> /mnt/t/output/jersey_sgd/gallery_review_v0_100/reports/gallery_review_100_grid.html
+
+2026-06-07 09:30 - gallery review grid: 1000/1000 labels -> /mnt/t/output/jersey_sgd/gallery_review_v0_train_1000/reports/gallery_review_train_1000_grid.html
+
+2026-06-07 09:53 - gallery train visibility labels: 2580/8978 ok, 775 visible -> /mnt/t/output/jersey_sgd/gallery_visibility_v0/manifests/gallery_train_visibility_labels.jsonl
+
+2026-06-07 10:28 - gallery train visibility labels: 8978/8978 ok, 2766 visible -> /mnt/t/output/jersey_sgd/gallery_visibility_v0/manifests/gallery_train_visibility_labels.jsonl
+
+2026-06-07 10:34 - gallery val visibility labels: 975/975 ok, 293 visible -> /mnt/t/output/jersey_sgd/gallery_visibility_v0/manifests/gallery_val_visibility_labels.jsonl
+
+2026-06-07 14:12 - gallery train visibility labels: 35563/35563 ok, 10931 visible -> /mnt/t/output/jersey_sgd/gallery_visibility_4x_v0/manifests/gallery_train_visibility_labels.jsonl
+
+2026-06-07 14:24 - gallery val visibility labels: 3844/3844 ok, 1199 visible -> /mnt/t/output/jersey_sgd/gallery_visibility_4x_v0/manifests/gallery_val_visibility_labels.jsonl
+
+2026-06-07 21:15 - gallery train visibility labels: 104301/104305 ok, 35399 visible -> /mnt/t/output/jersey_sgd/gallery_visibility_4x_v1/manifests/gallery_train_visibility_labels.jsonl
+
+2026-06-07 21:18 - gallery val visibility labels: 5344/5344 ok, 1791 visible -> /mnt/t/output/jersey_sgd/gallery_visibility_4x_v1/manifests/gallery_val_visibility_labels.jsonl

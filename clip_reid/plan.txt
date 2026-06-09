@@ -1,0 +1,45 @@
+Goal
+Reproduce CLIP-ReIdent on its original SynergyReID data, then evaluate and fine-tune it on the SkyBall jersey gallery dataset.
+
+Data Roots
+- CLIP-ReIdent original data: ./data/data_reid
+- CLIP-ReIdent checkpoints: ./model
+- SkyBall gallery data: /mnt/t/data/vball/skyball/jersey/gallery/v0
+
+Execution Plan
+1. Reproduce upstream baseline
+   - Install/fix dependencies in the active environment.
+   - Run download_data.py to fetch and extract SynergyReID.
+   - Run preprocess_data.py to create train_df.csv and challenge_df.csv.
+   - Download or locate the published checkpoint for ViT-L-14/openai.
+   - Run evaluate.py on the official test split and record mAP / rank metrics with and without reranking.
+
+2. Make runs configurable
+   - Add argparse or config overrides without changing default behavior.
+   - Keep the original SynergyReID dataloader intact.
+   - Add separate scripts/adapters for SkyBall rather than mixing datasets in one dataloader.
+
+3. Adapt SkyBall evaluation
+   - Convert /mnt/t/data/vball/skyball/jersey/gallery/v0/{train,val}/manifests/gallery_samples.jsonl into CLIP-ReIdent-style DataFrames.
+   - Use absolute crop paths or a dedicated SkyBall Dataset class to avoid copying data.
+   - For each identity, split selected crops deterministically into query/gallery images.
+   - Evaluate the upstream checkpoint on SkyBall val.
+   - Default evaluation scope is same match/team: each query only ranks gallery candidates from its own group.
+
+4. Staged SkyBall fine-tuning
+   - Stage 1: start from the reproduced upstream checkpoint.
+   - Stage 2: train only on SkyBall train with a separate SkyBall dataloader.
+   - Default SkyBall minibatches are full same match/team rosters, one sampled image per player, to emphasize same-jersey discrimination.
+   - Evaluate after each epoch on SkyBall val.
+   - Compare upstream checkpoint vs SkyBall fine-tuned checkpoint.
+
+Reproducibility
+- Fix Python, NumPy, and PyTorch seeds for all training and query/gallery splits.
+- Record command lines, git commit, checkpoint paths, and metric outputs.
+- Prefer GPUs 0,1 for training; use GPU 0 for evaluation unless multi-GPU is explicitly helpful.
+- Grouped SkyBall batch sampling is epoch-seeded for repeatability.
+
+Open Questions / Risks
+- Published checkpoint download is hosted on Google Drive; it may require a manual or gdown-compatible download.
+- Full ViT-L-14 training may be slow; first validate the pipeline with evaluation and a short smoke fine-tune.
+- SkyBall identities with fewer than two crops cannot support query/gallery evaluation and must be skipped or handled separately.

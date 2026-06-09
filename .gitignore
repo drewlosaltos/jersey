@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local/generated artifacts
+outputs/
+debug/
+*.log
+*.tmp
+*~
+
+# Training artifacts
+tensorboard/
+events.out.tfevents*
+*.pt
+*.pth
+*.ckpt
+runs/
+
+# Large local model/data caches
+clip_reid/model/
+clip_reid/data/
+clip_reid/debug/
+jersey_sdg/outputs/
+
+# OS/editor
+.DS_Store
+.vscode/
