@@ -20,7 +20,7 @@ When given a new split such as `/mnt/t/data/vball/skyball/unified_dataset/splits
 3. Build `/mnt/t/data/vball/skyball/jersey/gallery_jersey_recognition/v2_4x` with `target-count 60`.
 4. Label visibility in `jersey_sdg` with Qwen.
 5. Train jersey recognition in `jersey_sdg`.
-6. Append metrics to `workflows/results.jsonl` and update `workflows/results_summary.md`.
+6. Validate retraining results: append metrics to `workflows/results.jsonl`, update `workflows/results_summary.md`, and explicitly check whether the new primary metric is greater than or equal to the previous best.
 
 ## Development Commands
 
@@ -35,7 +35,7 @@ Use `pt5090new` for training/tests and `vllm5090` for Qwen/vLLM labeling.
 
 ## Operational Rules
 
-Prefer `tmux` for long jobs. Use GPUs `2,3` for jersey recognition or Qwen when available; leave `0,1` for detector/ReID jobs when they are active. Do not overwrite completed outputs under `/mnt/t/output`; create versioned run names. Record command lines, output paths, dataset version, and metrics for every final run.
+Prefer `tmux` for long jobs. Use GPUs `2,3` for jersey recognition or Qwen when available; leave `0,1` for detector/ReID jobs when they are active. Do not overwrite completed outputs under `/mnt/t/output`; create versioned run names. Record command lines, output paths, dataset version, and metrics for every final run. Any network retraining is incomplete until its metrics are added to `workflows/results.jsonl` and compared against the prior best in `workflows/results_summary.md`.
 
 ## Git Hygiene
 

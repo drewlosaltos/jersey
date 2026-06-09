@@ -41,7 +41,7 @@ CUDA_VISIBLE_DEVICES=0,1 python train_skyball.py \
   --output-dir /mnt/t/output/trn/clip_reid/skyball_roster_${VERSION}_vitl14_lr1e-5_e20_seed1
 ```
 
-Evaluate on the new validation gallery and, when comparing against older datasets, evaluate the new checkpoint on the previous best validation gallery too.
+Evaluate on the new validation gallery and, when comparing against older datasets, evaluate the new checkpoint on the previous best validation gallery too. Treat result recording as part of validation: append the completed run to `workflows/results.jsonl`, then compare its primary metric against the previous CLIP-ReID best in `workflows/results_summary.md`.
 
 ## 3. Build 4x Jersey-Recognition Gallery
 
@@ -102,7 +102,9 @@ CUDA_VISIBLE_DEVICES=2,3 conda run --no-capture-output -n pt5090new \
     --data-parallel
 ```
 
-## 6. Record Results
+## 6. Validate and Record Results
+
+Every retrained network must be validated against the historical best before the workflow is considered complete.
 
 Append one JSON object per completed run to `workflows/results.jsonl`. Include at least:
 
@@ -110,5 +112,11 @@ Append one JSON object per completed run to `workflows/results.jsonl`. Include a
 {"task":"jersey_recognition","dataset_version":"v2","dataset":"v2_4x","run_name":"...","primary_metric":"best_visible_acc","primary_value":0.0,"output":"..."}
 ```
 
-Then update `workflows/results_summary.md` with the current best and whether the new dataset improved over the previous best.
+Then update `workflows/results_summary.md` with:
 
+- previous best run and metric value
+- new run and metric value
+- `pass` if the new primary metric is greater than or equal to the previous best, otherwise `regression`
+- notes about validation-set changes or cross-evaluation caveats
+
+For jersey recognition, the primary metric is currently `best_visible_acc`. For CLIP-ReID, use reranked mAP unless a workflow explicitly chooses a different primary metric.
